@@ -32,7 +32,7 @@ function gen_rpn_interpreter(op_keys, data_translator, sep = " "){
     //
     function stack_fun(fun){
         return function(arg_stack){
-            arg_stack.unshift.apply(arg_stack, to_array_box(fun.apply(this, arg_stack.splice(0, fun.length))));
+            arg_stack.unshift.apply(arg_stack, to_array_box(fun.apply(this, arg_stack.splice(0, fun.length))).reverse());
         }
     }
     
@@ -76,14 +76,14 @@ function simple_test(){
     let simple_rpn_ops = {
         "+": function(a, b){ return a + b },
         "*": function(a, b){ return a * b }, 
-        //Note the order! First = closest to operator
+        //Note the order! First = closest to operator. this is "b a -" := b - a
         "-": function(a, b){ return b - a },
         //Can also take different number of args
         "neg": function(a) { return -a },
         //Add side-effects
         "print": function(a) { console.log(a); return a },
         //Can also return multiple variables!
-        "+-": function(a, b){ return [b + a, b - a] }
+        "+-": function(a, b){ return [b + a, b - a] // "b a +-" := "b a + b a -"}
     };
     let simple_data_trans = function(in_string){
         return parseInt(in_string)
