@@ -10,6 +10,18 @@ function gen_rpn_interpreter(op_keys, data_translator, sep = " "){
     //      and computes the output.
     
     
+    //Flatten an array one level.
+    // [[1, [2, 3]], 4] => [1, [2, 3], 4]
+    function flatten_array_once(nestedArray){
+        return [].concat.apply([], nestedArray);
+    }
+    
+    //Returns an array if x is a single value or an array.
+    function to_array_box(x){
+        return flatten_array_once([x])
+    }
+    
+    
     // Changes a function on data_types into an in-place stack function.
     // Symbolically, this cna be interpreted as:
     // stack_fun := (fun := (data_type[fun.length] -> data_type)) ->
@@ -20,7 +32,7 @@ function gen_rpn_interpreter(op_keys, data_translator, sep = " "){
     //
     function stack_fun(fun){
         return function(arg_stack){
-            arg_stack.unshift(fun.apply(this, arg_stack.splice(0, fun.length)));
+            arg_stack.unshift.apply(arg_stack, to_array_box(fun.apply(this, arg_stack.splice(0, fun.length))));
         }
     }
     
@@ -34,9 +46,11 @@ function gen_rpn_interpreter(op_keys, data_translator, sep = " "){
         }
     }
     
+
     //The returned interpreter.
     function rpn_intr(inString){
         let stack = []; //[data_type]
+        
         //e.g. inString := "4 1 5 + 3 - *"
         //could go through the following steps:
         // 4 1 5 + 3 - * =>
@@ -67,7 +81,9 @@ function simple_test(){
         //Can also take different number of args
         "neg": function(a) { return -a },
         //Add side-effects
-        "print": function(a) { console.log(a); return a }
+        "print": function(a) { console.log(a); return a },
+        //Can also return multiple variables!
+        "+-": function(a, b){ return [b + a, b - a] }
     };
     let simple_data_trans = function(in_string){
         return parseInt(in_string)
